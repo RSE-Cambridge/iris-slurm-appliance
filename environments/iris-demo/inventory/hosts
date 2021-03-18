@@ -1,0 +1,46 @@
+[all:vars]
+ansible_user=centos
+ssh_proxy=128.232.227.172
+openhpc_cluster_name=wjsohpc2
+
+[wjsohpc2_login]
+wjsohpc2-login-0 ansible_host=10.1.0.130 server_networks='{"demo-vxlan":["10.1.0.130"]}'
+
+[wjsohpc2_control]
+wjsohpc2-control-0 ansible_host=10.1.0.184 server_networks='{"demo-vxlan":["10.1.0.184"]}'
+
+[wjsohpc2_compute]
+wjsohpc2-compute-0 ansible_host=10.1.0.249 server_networks='{"demo-vxlan":["10.1.0.249"]}'
+wjsohpc2-compute-1 ansible_host=10.1.0.155 server_networks='{"demo-vxlan":["10.1.0.155"]}'
+
+[requires_jumphost:children]
+wjsohpc2_control
+wjsohpc2_login
+wjsohpc2_compute
+
+[cluster_login:children]
+wjsohpc2_login
+
+# NOTE: This is hardcoded in the tests role
+[cluster_compute:children]
+wjsohpc2_compute
+
+[cluster_control:children]
+wjsohpc2_control
+
+[login:children]
+cluster_login
+
+[compute:children]
+cluster_compute
+
+[control:children]
+cluster_control
+
+[cluster:children]
+login
+control
+compute
+
+[requires_jumphost:vars]
+ansible_ssh_common_args='-o ProxyCommand="ssh centos@128.232.227.172 -W %h:%p"'
